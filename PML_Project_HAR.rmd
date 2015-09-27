@@ -11,6 +11,8 @@ This document is part of the course project for coursera PML class. The goal is 
 
 ## The Approach: Machine Learning using Boosting Model
 
+The followings show the steps we achieve HAR using machine learning with the boosting model. First we clean up the data. Then we slice the training set into training and testing subsets for cross validation. Finally, we train our selected models and pick the one that produces a better result. 
+
 ### Step 1: Loading the original data sets
 
 ```{r}
@@ -83,7 +85,9 @@ predictions <- predict(modFit, testing)
 confusionMatrix(predictions, testing$classe)
 ```
 
-### Alternative training approach with PCA (Cross Validation)
+#### The accuracy is estimated at about 96.33%, thus the out of sample error is around 3.67%.
+
+### Alternative training approach with PCA
 Alternatively, if we pre-process the data using Principal Components Analysis (PCA) with default parameters, the results turn out to be inferior with lower prediction accuracy on the testing set:
 
 ```{r, eval=FALSE}
@@ -104,7 +108,7 @@ confusionMatrix(predictions, testing$classe)
 load("saved_model_boosting.rda")
 ```
 
-The accuracy turns out to be a lot lower. Therefore we prefer the previous model without PCA.
+#### The accuracy turns out to be a lot lower. Therefore we prefer the previous model without PCA.
 
 ### Step 6: Making predictions on the Original Test Set
 ```{r}
@@ -125,6 +129,6 @@ pml_write_files(result_gbm)
 ```
 
 ## Conclusion
-Cleaning the data is more important than choosing the model. For this project, we first removed invalid and irreleavant columns and preserved only sensor data. Further cleaning and compressing the predictors needs to be very careful. For example, if we use PCA for predictor compression, we might get a low accuracy. Our approach was to give the data to Boosting Model which further figured out 45 of 52 predictors that had non-zero influence, as *finalModel* indicated. The training process took around a couple of hours on my old home desktop machine (Intel Celeron G1610 @ 2.6GHz + 6GB RAM + Windows 64bit) to finish. The accuracy/performance is good and achieved >96% balanced accuracy on our sub-testing set.
+Cleaning the data is more important than choosing the model. For this project, we first removed invalid and irreleavant columns and preserved only sensor data. Further cleaning and compressing the predictors needs to be very careful. For example, if we use PCA for predictor compression, we might get a low accuracy. Our approach was to give the data to Boosting Model which further figured out 45 of 52 predictors that had non-zero influence, as *finalModel* indicated. The training process took around a couple of hours on my old home desktop machine (Intel Celeron G1610 @ 2.6GHz + 6GB RAM + Windows 64bit) to finish. The accuracy/performance is good and achieved about **96.33%** accuracy on our sub-testing set.
 
 I would like to thank PML staff for making this project. It has been an enriching experience.
