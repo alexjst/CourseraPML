@@ -1,0 +1,130 @@
+---
+title: 'PML Project: Human Activity Recognition'
+author: "Alex Yang"
+date: "Sept. 27, 2015"
+output: html_document
+---
+
+## Introduction
+
+This document is part of the course project for coursera PML class. The goal is to use machine learning methods to perform human activity recognition (HAR) using data from hardware devices such as accelerometers on the belt, forearm, arm, and dumbell. For more information please check the source: <http://groupware.les.inf.puc-rio.br/har>.
+
+## The Approach: Machine Learning using Boosting Model
+
+### Step 1: Loading the original data sets
+
+```{r}
+#load necessary libraries
+rm(list=ls())
+library(ggplot2); library(caret);
+
+#load given training and testing sets
+training_original <- read.csv("pml-training.csv")
+testing_original <- read.csv("pml-testing.csv")
+```
+
+A peek into the given data set reveals a large amount of irrelevant information for our prediction. In the following prediction process with Machine Learning, we'll first clean up the data and then use the **Boosting** method.
+
+### Step 2.1: Data Cleaning - Remove columns with blank or NA values
+
+We first replace blank cells with NA and then remove all columns with NAs. This will remove columns with both blank and NA values.
+
+```{r}
+#clean up step 1: remove columns with values of either "" (blank) or "NA"
+training_original[training_original==""] <- NA  # replace blank with NA first
+testing_original[testing_original==""] <- NA
+training_clean <- training_original[, !colSums(is.na(training_original))]  # remove columns with NA (sum is NA)
+testing_clean <- testing_original[, !colSums(is.na(testing_original))]
+```
+
+### Step 2.2: Data Cleaning - Remove other irrelevant columns
+
+Notice that column 1 through 7 ("X" "user_name" "raw_timestamp_part_1" "raw_timestamp_part_2" "cvtd_timestamp" "new_window" "num_window") are merely meta data for the data recording experiments. We can remove these columns and preverse only the hardware sensor data that are relevant to our machine learning model.
+
+```{r}
+#clean up step 1: remove apparently uncorrelated data (preserving only sensor data)
+training_clean <- training_clean[-7:-1]
+testing_clean <- testing_clean[-7:-1]
+dim(training_clean)
+```
+
+Note we now have 53 variables in the training set.
+
+### Step 3: Data Slicing
+
+We'll leave the original testing data set intact and slice the training set into our sub-training set and sub-testing set. Let's use 75 percent of the data for training and the rest for testing, as shown below.
+
+```{r}
+#data slicing the original training data set into my own training and testing sets
+set.seed(12345)
+inTrain <- createDataPartition(y=training_clean$classe, p=0.75, list=FALSE)
+training <- training_clean[inTrain,]
+testing <- training_clean[-inTrain,]
+```
+
+Now variables *training* and *testing* are the two real data sets we use to train and test our machine learning models.
+
+### Step 4: Boosting with Trees
+
+Boosting is known to be a highly accurate classifier that can take in lots of possibly weak predictors. It weights these predictors and add them up to get a stronger predictor.
+```{r, echo=FALSE}
+load("saved_model_boosting.rda")
+```
+
+```{r, eval=FALSE}
+modFit <- train(classe~., method="gbm", data=training, verbose=FALSE)
+modFit$finalModel
+```
+
+### Step 5: Expected accuracy with Confusion Matrix
+
+```{r}
+predictions <- predict(modFit, testing)
+confusionMatrix(predictions, testing$classe)
+```
+
+### Alternative training approach with PCA (Cross Validation)
+Alternatively, if we pre-process the data using Principal Components Analysis (PCA) with default parameters, the results turn out to be inferior with lower prediction accuracy on the testing set:
+
+```{r, eval=FALSE}
+modFit2 <- train(classe~., method="gbm", preProcess="pca", data=training, verbose=FALSE)
+modFit2$finalModel
+predictions2 <- predict(modFit2, testing)
+confusionMatrix(predictions2, testing$classe)
+```
+
+```{r, echo=FALSE}
+load("saved_model_boosting_pca.rda")
+modFit$finalModel
+predictions <- predict(modFit, testing)
+confusionMatrix(predictions, testing$classe)
+```
+
+```{r, echo=FALSE}
+load("saved_model_boosting.rda")
+```
+
+The accuracy turns out to be a lot lower. Therefore we prefer the previous model without PCA.
+
+### Step 6: Making predictions on the Original Test Set
+```{r}
+result_gbm <- predict(modFit, testing_original)
+result_gbm
+```
+
+### Step 7: Writing the result
+```{r eval=FALSE}
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(result_gbm)
+```
+
+## Conclusion
+Cleaning the data is more important than choosing the model. For this project, we first removed invalid and irreleavant columns and preserved only sensor data. Further cleaning and compressing the predictors needs to be very careful. For example, if we use PCA for predictor compression, we might get a low accuracy. Our approach was to give the data to Boosting Model which further figured out 45 of 52 predictors that had non-zero influence, as *finalModel* indicated. The training process took around a couple of hours on my old home desktop machine (Intel Celeron G1610 @ 2.6GHz + 6GB RAM + Windows 64bit) to finish. The accuracy/performance is good and achieved >96% balanced accuracy on our sub-testing set.
+
+I would like to thank PML staff for making this project. It has been an enriching experience.
