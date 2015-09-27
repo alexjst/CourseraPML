@@ -73,6 +73,7 @@ img {
 </div>
 <div id="the-approach-machine-learning-using-boosting-model" class="section level2">
 <h2>The Approach: Machine Learning using Boosting Model</h2>
+<p>The followings show the steps we achieve HAR using machine learning with the boosting model. First we clean up the data. Then we slice the training set into training and testing subsets for cross validation. Finally, we train our selected models and pick the one that produces a better result.</p>
 <div id="step-1-loading-the-original-data-sets" class="section level3">
 <h3>Step 1: Loading the original data sets</h3>
 <pre class="r"><code>#load necessary libraries
@@ -167,9 +168,12 @@ modFit$finalModel</code></pre>
 ## Detection Rate         0.2812   0.1801   0.1686   0.1564   0.1770
 ## Detection Prevalence   0.2896   0.1868   0.1831   0.1623   0.1782
 ## Balanced Accuracy      0.9884   0.9611   0.9749   0.9735   0.9809</code></pre>
+<div id="the-accuracy-is-estimated-at-about-96.33-thus-the-out-of-sample-error-is-around-3.67." class="section level4">
+<h4>The accuracy is estimated at about 96.33%, thus the out of sample error is around 3.67%.</h4>
 </div>
-<div id="alternative-training-approach-with-pca-cross-validation" class="section level3">
-<h3>Alternative training approach with PCA (Cross Validation)</h3>
+</div>
+<div id="alternative-training-approach-with-pca" class="section level3">
+<h3>Alternative training approach with PCA</h3>
 <p>Alternatively, if we pre-process the data using Principal Components Analysis (PCA) with default parameters, the results turn out to be inferior with lower prediction accuracy on the testing set:</p>
 <pre class="r"><code>modFit2 &lt;- train(classe~., method=&quot;gbm&quot;, preProcess=&quot;pca&quot;, data=training, verbose=FALSE)
 modFit2$finalModel
@@ -209,7 +213,9 @@ confusionMatrix(predictions2, testing$classe)</code></pre>
 ## Detection Rate         0.2553   0.1462   0.1464   0.1289   0.1444
 ## Detection Prevalence   0.2975   0.1845   0.2064   0.1550   0.1566
 ## Balanced Accuracy      0.9192   0.8540   0.8836   0.8774   0.8854</code></pre>
-<p>The accuracy turns out to be a lot lower. Therefore we prefer the previous model without PCA.</p>
+<div id="the-accuracy-turns-out-to-be-a-lot-lower.-therefore-we-prefer-the-previous-model-without-pca." class="section level4">
+<h4>The accuracy turns out to be a lot lower. Therefore we prefer the previous model without PCA.</h4>
+</div>
 </div>
 <div id="step-6-making-predictions-on-the-original-test-set" class="section level3">
 <h3>Step 6: Making predictions on the Original Test Set</h3>
@@ -232,7 +238,7 @@ pml_write_files(result_gbm)</code></pre>
 </div>
 <div id="conclusion" class="section level2">
 <h2>Conclusion</h2>
-<p>Cleaning the data is more important than choosing the model. For this project, we first removed invalid and irreleavant columns and preserved only sensor data. Further cleaning and compressing the predictors needs to be very careful. For example, if we use PCA for predictor compression, we might get a low accuracy. Our approach was to give the data to Boosting Model which further figured out 45 of 52 predictors that had non-zero influence, as <em>finalModel</em> indicated. The training process took around a couple of hours on my old home desktop machine (Intel Celeron G1610 @ 2.6GHz + 6GB RAM + Windows 64bit) to finish. The accuracy/performance is good and achieved &gt;96% balanced accuracy on our sub-testing set.</p>
+<p>Cleaning the data is more important than choosing the model. For this project, we first removed invalid and irreleavant columns and preserved only sensor data. Further cleaning and compressing the predictors needs to be very careful. For example, if we use PCA for predictor compression, we might get a low accuracy. Our approach was to give the data to Boosting Model which further figured out 45 of 52 predictors that had non-zero influence, as <em>finalModel</em> indicated. The training process took around a couple of hours on my old home desktop machine (Intel Celeron G1610 @ 2.6GHz + 6GB RAM + Windows 64bit) to finish. The accuracy/performance is good and achieved about <strong>96.33%</strong> accuracy on our sub-testing set.</p>
 <p>I would like to thank PML staff for making this project. It has been an enriching experience.</p>
 </div>
 
